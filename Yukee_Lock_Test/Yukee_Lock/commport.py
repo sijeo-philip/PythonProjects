@@ -86,6 +86,36 @@ class DataLogger():
         self.mcu_textbox.config(yscrollcommand=scrollbar.set)
         self.sim_textbox.config(yscrollcommand=scrollbar.set)
 
+        self.__search_frame=ttk.LabelFrame(self.__top_frame, text="Search String", width=100, height=60)
+        self.__search_frame.place(x=550, y=90)
+
+        ttk.Label(self.__search_frame,text="Search AT: ",width=13, anchor=W).pack(side=LEFT)
+        srchStr = StringVar()
+        e=ttk.Entry(self.__search_frame,width=40, textvariable=srchStr)
+        e.pack(side=LEFT,pady=10)
+        btn = ttk.Button(self.__search_frame, text="Search", command=lambda ss=srchStr: self.__search_text(ss.get()))
+        btn.pack(side=LEFT, padx=10, pady=5)
+        e.bind('<Return>', lambda evt, btn=btn: btn.invoke())
+
+
+    def __search_text(self, srchString):
+        #remove previous search results
+        self.mcu_textbox.tag_remove('search',0.0,END)
+        #empty search string?
+        if not srchString:
+            return 'break'
+        cur = 1.0
+        length_mcu = IntVar()
+        while True:
+            cur = self.mcu_textbox.search(srchString, cur, nocase=1, stopindex=END,count=length_mcu)
+            if not cur:
+                return 'break'
+            matchEndMCU = '{0}+{1}c'.format(cur, length_mcu.get())
+            self.mcu_textbox.tag_add('search',cur, matchEndMCU)
+            cur = self.mcu_textbox.index(matchEndMCU)
+            self.mcu_textbox.tag_configure('search', background='yellow')
+
+
     def __serial_port(self):
         """
         Lists Serial port Names
@@ -151,6 +181,8 @@ class DataLogger():
                     child['state'] = DISABLED
                 for child in self.__stop_bits_frame.winfo_children():
                     child['state'] = DISABLED
+                for child in self.__search_frame.winfo_children():
+                    child['state'] = DISABLED
         except (comm.SerialException):
             messagebox.showinfo(title="Serial Port Error", message="The COM ports need to be selected properly!,"
                                                                 "They cannot be the same or NoValue!!")
@@ -177,6 +209,8 @@ class DataLogger():
         for child in self.__flow_control_frame.winfo_children():
             child['state'] = NORMAL
         for child in self.__stop_bits_frame.winfo_children():
+            child['state'] = NORMAL
+        for child in self.__search_frame.winfo_children():
             child['state'] = NORMAL
 
 
